@@ -1,0 +1,272 @@
+{
+    
+    "Parameters": {
+        "cidrforvpc": {
+            "Type": "String",
+            "Default": "192.168.0.0/16"
+        },
+        "subnetcidr": {
+            "Type": "CommaDelimitedList",
+            "Default": "192.168.0.0/24,192.168.1.0/24,192.168.2.0/24,192.168.3.0/24,192.168.4.0/24,192.168.5.0/24"
+        },
+        "zone1" : {
+            "Description" : "this is zone1 for 3 subnets",
+            "Type" : "AWS::EC2::AvailabilityZone::Name"
+        },
+        "zone2" : {
+            "Description" : "this is zone2 for 3 subnets",
+            "Type" : "AWS::EC2::AvailabilityZone::Name"
+        }
+    },
+    
+    "Resources": {
+        "vpc": {
+            "Description": "vpc",
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": {
+                    "Ref": "cidrforvpc"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "vpc by cf"
+                    }
+                ],
+                "EnableDnsSupport": "true",
+                "EnableDnsHostnames": "true"
+            }
+        },
+        
+        "myigw": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key" : "Name",
+                        "Value": "internetgate way"
+
+                    }
+                ]
+            }
+        },
+        "AttachGateway": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "ntiervpc"
+                },
+                "InternetGatewayId": {
+                    "Ref": "ntierigw"
+                }
+            }
+        },
+        
+        "websg" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : "Allow ssh http https",
+                "VpcId" : {"Ref" : "vpc"},
+                "SecurityGroupIngress" : [{
+                    "IpProtocol" : "tcp",
+                    "FromPort" : 22,
+                    "ToPort" : 22,
+                    "CidrIp" : "0.0.0.0/0"
+                },
+                {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : 80,
+                    "ToPort" : 80,
+                    "CidrIp" : "0.0.0.0/0"
+                },
+                {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : 443,
+                    "ToPort" : 443,
+                    "CidrIp" : {
+                         "Ref": "cidrforvpc" 
+                        }
+                    
+                }]
+            }
+        },
+        "appsg" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : "Allow ssh tcp8080",
+                "VpcId" : {"Ref" : "vpc"},
+                "SecurityGroupIngress" : [{
+                    "IpProtocol" : "tcp",
+                    "FromPort" : 22,
+                    "ToPort" : 22,
+                    "CidrIp" : {
+                         "Ref": "cidrforvpc" 
+                        }
+                    
+                },
+                {
+                    "IpProtocol" : "tcp",
+                    "FromPort" : 8080,
+                    "ToPort" : 8080,
+                    "CidrIp" : "0.0.0.0/0"
+                }]
+            }
+        },
+        "subnet1": {
+            "Description": "subnet1",
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": { 
+                    "Ref": "zone1" 
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        0,
+                        {
+                            "Ref": "subnetcidr"
+                        }
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "web1"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "vpc"
+                }
+            }
+        },
+        "subnet2": {
+            "Description": "subnet2",
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": { 
+                    "Ref": "zone2" 
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        1,
+                        {
+                            "Ref": "subnetcidr"
+                        }
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "web2"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "vpc"
+                }
+            }
+        },
+        "subnet3": {
+            "Description": "subnet3",
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": { 
+                    "Ref": "zone1" 
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        2,
+                        {
+                            "Ref": "subnetcidr"
+                        }
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "app1"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "vpc"
+                }
+            }
+        },
+        "subnet4": {
+            "Description": "subnet4",
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": { 
+                    "Ref": "zone2" 
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        3,
+                        {
+                            "Ref": "subnetcidr"
+                        }
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "app2"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "vpc"
+                }
+            }
+        },
+        "subnet5": {
+            "Description": "subnet5",
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": { 
+                    "Ref": "zone1" 
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        4,
+                        {
+                            "Ref": "subnetcidr"
+                        }
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "db1"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "vpc"
+                }
+            }
+        },
+        "subnet6": {
+            "Description": "subnet6",
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": { 
+                    "Ref": "zone2" 
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        5,
+                        {
+                            "Ref": "subnetcidr"
+                        }
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "db2"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "vpc"
+                }
+            }
+        }
+    }
+}
